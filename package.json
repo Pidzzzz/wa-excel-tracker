@@ -1,11 +1,30 @@
 {
   "name": "wa-excel-tracker",
   "version": "1.0.0",
-  "description": "Kirim SITE NAME + tanggal visit dari Excel ke WhatsApp",
+  "description": "Otomasi list visit bulanan dari Excel — smart search site, storage per bulan, rekap kirim ke WhatsApp",
   "main": "server.js",
   "type": "commonjs",
+  "license": "MIT",
+  "author": "Pidzzzz",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Pidzzzz/wa-excel-tracker.git"
+  },
+  "keywords": [
+    "visit-tracker",
+    "whatsapp",
+    "baileys",
+    "excel",
+    "xlsx",
+    "field-visit",
+    "rekap",
+    "automation"
+  ],
   "scripts": {
     "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.16",
