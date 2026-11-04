@@ -1,0 +1,9 @@
+{
+  "excelFile": "D:/RE_Project/datek.xlsx",
+  "targetNumber": "62895349080811",
+  "sheetName": "DATEK MSP",
+  "siteColumn": "NAMA LOKASI",
+  "dateColumn": "",
+  "dateFormat": "DD/MM/YYYY",
+  "messageTemplate": "📋 *Laporan Kunjungan*\n\nSite Name : {site}\nTanggal Visit : {date}"
+}

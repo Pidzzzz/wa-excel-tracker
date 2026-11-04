@@ -1,0 +1,5 @@
+node_modules/
+auth_session/
+visits/*.xlsx
+*.log
+.DS_Store

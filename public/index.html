@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Visit Tracker</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2129;
+      --panel2: #212a34;
+      --border: #2d3844;
+      --text: #e7edf3;
+      --muted: #8b9aab;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --green: #22c55e;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --radius: 12px;
+      --shadow: 0 8px 30px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1e3a5f33, transparent),
+                  radial-gradient(900px 500px at 100% 0%, #14532d22, transparent),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 28px 16px 60px;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; }
+
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 22px; flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), #6366f1);
+      display: grid; place-items: center; font-size: 20px;
+      box-shadow: 0 4px 16px #3b82f655;
+    }
+    h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -.02em; }
+    .sub { color: var(--muted); font-size: .85rem; margin-top: 2px; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+    .card h2 {
+      font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--muted); margin-bottom: 14px; font-weight: 600;
+    }
+
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .row > * { flex: 1; min-width: 160px; }
+    .row .grow { flex: 2; min-width: 240px; }
+
+    label { display: block; font-size: .78rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+    input, select, textarea {
+      width: 100%; padding: 11px 13px;
+      background: var(--panel2); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: .95rem;
+      outline: none; transition: border .15s, box-shadow .15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px #3b82f633;
+    }
+    input::placeholder { color: #5c6b7a; }
+
+    .search-box { position: relative; }
+    .suggestions {
+      position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: var(--panel2); border: 1px solid var(--border);
+      border-radius: 10px; max-height: 260px; overflow-y: auto;
+      z-index: 50; box-shadow: var(--shadow); display: none;
+    }
+    .suggestions.open { display: block; }
+    .suggestions button {
+      display: block; width: 100%; text-align: left;
+      padding: 10px 14px; background: none; border: none;
+      color: var(--text); font-size: .9rem; cursor: pointer;
+      border-bottom: 1px solid #2a333e;
+    }
+    .suggestions button:last-child { border-bottom: none; }
+    .suggestions button:hover, .suggestions button.active { background: #3b82f622; }
+    .suggestions .empty { padding: 12px 14px; color: var(--muted); font-size: .85rem; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 11px 18px; border-radius: 10px; border: none;
+      font-size: .92rem; font-weight: 600; cursor: pointer;
+      transition: transform .1s, background .15s, opacity .15s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-green { background: var(--green); color: #052e16; }
+    .btn-green:hover:not(:disabled) { background: #16a34a; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--panel2); color: var(--text); }
+    .btn-sm { padding: 6px 10px; font-size: .8rem; border-radius: 8px; }
+    .btn-danger { background: transparent; color: var(--red); border: 1px solid #7f1d1d; }
+    .btn-danger:hover { background: #7f1d1d33; }
+
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 14px;
+    }
+    .toolbar h2 { margin: 0; }
+
+    .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .stat {
+      background: var(--panel2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 16px; min-width: 110px;
+    }
+    .stat .num { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+    .stat .lbl { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+    .day-group {
+      background: var(--panel2); border: 1px solid var(--border);
+      border-radius: 10px; margin-bottom: 12px; overflow: hidden;
+    }
+    .day-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px; background: #1a2430;
+      border-bottom: 1px solid var(--border);
+    }
+    .day-title { font-weight: 600; font-size: .92rem; }
+    .badge {
+      font-size: .72rem; padding: 3px 9px; border-radius: 999px;
+      background: #3b82f622; color: #60a5fa; border: 1px solid #3b82f644;
+      font-weight: 600;
+    }
+    .badge.warn { background: #f59e0b22; color: var(--amber); border-color: #f59e0b44; }
+    .visit-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 14px; border-bottom: 1px solid #2a333e;
+    }
+    .visit-item:last-child { border-bottom: none; }
+    .visit-item .idx {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #3b82f633; color: #60a5fa;
+      display: grid; place-items: center;
+      font-size: .75rem; font-weight: 700; flex-shrink: 0;
+    }
+    .visit-item .name { flex: 1; font-size: .92rem; word-break: break-word; }
+    .visit-item .note { color: var(--muted); font-size: .8rem; }
+
+    .empty-state {
+      text-align: center; padding: 40px 20px; color: var(--muted);
+    }
+    .empty-state .icon { font-size: 2.4rem; margin-bottom: 10px; }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--panel2); border: 1px solid var(--border);
+      color: var(--text); padding: 12px 20px; border-radius: 10px;
+      box-shadow: var(--shadow); font-size: .9rem; z-index: 100;
+      opacity: 0; transition: .25s; pointer-events: none;
+      max-width: 90vw; text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.ok { border-color: #22c55e66; }
+    .toast.err { border-color: #ef444466; }
+
+    .modal-bg {
+      position: fixed; inset: 0; background: #000a;
+      display: none; place-items: center; z-index: 90; padding: 20px;
+    }
+    .modal-bg.open { display: grid; }
+    .modal {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; max-width: 400px; width: 100%;
+      text-align: center; box-shadow: var(--shadow);
+    }
+    .modal h3 { margin-bottom: 8px; }
+    .modal p { color: var(--muted); font-size: .88rem; margin-bottom: 16px; }
+    .modal img {
+      background: #fff; padding: 12px; border-radius: 12px;
+      width: 280px; max-width: 100%;
+    }
+    .modal .actions { margin-top: 16px; display: flex; gap: 10px; justify-content: center; }
+
+    .spin {
+      width: 16px; height: 16px; border: 2px solid #fff4;
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .7s linear infinite; display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .preview-box {
+      background: var(--panel2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px; white-space: pre-wrap;
+      font-size: .85rem; line-height: 1.55; max-height: 300px;
+      overflow-y: auto; display: none; margin-top: 12px;
+      font-family: inherit;
+    }
+    .preview-box.open { display: block; }
+
+    footer { text-align: center; color: #4a5563; font-size: .78rem; margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">📍</div>
+        <div>
+          <h1>Visit Tracker</h1>
+          <div class="sub">List visit bulanan dari datek.xlsx</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" id="btnPreview">📄 Preview Rekap</button>
+        <button class="btn btn-green" id="btnSendWA">💬 Kirim ke WhatsApp</button>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>Tambah Visit</h2>
+      <div class="row">
+        <div>
+          <label for="inpDate">Tanggal Visit</label>
+          <input type="date" id="inpDate" />
+        </div>
+        <div class="grow search-box">
+          <label for="inpSite">Nama / Potongan Lokasi</label>
+          <input type="text" id="inpSite" placeholder="ketik minimal 2 huruf… (mis. wailotong)" autocomplete="off" />
+          <div class="suggestions" id="suggestions"></div>
+        </div>
+        <div>
+          <label for="inpNote">Keterangan <span style="font-weight:400">(opsional)</span></label>
+          <input type="text" id="inpNote" placeholder="mis. bersama tim" />
+        </div>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" id="btnAdd">＋ Tambah ke List</button>
+        <span id="matchInfo" style="color:var(--muted);font-size:.83rem;align-self:center;"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <h2>List Visit</h2>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="month" id="inpMonth" style="width:auto;" />
+          <button class="btn btn-ghost btn-sm" id="btnClear">🗑 Bersihkan Bulan</button>
+        </div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+      <div id="list"></div>
+      <div class="preview-box" id="preview"></div>
+    </section>
+
+    <footer>Excel tersimpan di folder <code>visits/visit-YYYY-MM.xlsx</code></footer>
+  </div>
+
+  <div class="modal-bg" id="qrModal">
+    <div class="modal">
+      <h3>Scan QR WhatsApp</h3>
+      <p>WhatsApp → Perangkat Tertaut → Scan kode ini</p>
+      <img id="qrImg" alt="QR" />
+      <div class="actions">
+        <button class="btn btn-ghost" id="btnCloseQR">Tutup</button>
+        <button class="btn btn-primary" id="btnRetryQR">↻ Refresh QR</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let sitesCache = [];
+    let selectedSite = "";
+    let searchTimer = null;
+    let activeIdx = -1;
+
+    function toast(msg, ok = true) {
+      const t = $("toast");
+      t.textContent = msg;
+      t.className = "toast show " + (ok ? "ok" : "err");
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove("show"), 3000);
+    }
+
+    function todayISO() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    }
+
+    function currentMonth() {
+      return $("inpMonth").value || todayISO().slice(0, 7);
+    }
+
+    function fmtDate(iso) {
+      const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+      const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+      const [y,m,d] = iso.split("-").map(Number);
+      const dt = new Date(y, m-1, d);
+      return `${hari[dt.getDay()]}, ${d} ${bulan[m-1]} ${y}`;
+    }
+
+    async function api(url, opts) {
+      const res = await fetch(url, opts);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      return data;
+    }
+
+    // ---- search suggestions ----
+    const inpSite = $("inpSite");
+    const sugg = $("suggestions");
+
+    inpSite.addEventListener("input", () => {
+      selectedSite = "";
+      $("matchInfo").textContent = "";
+      clearTimeout(searchTimer);
+      const q = inpSite.value.trim();
+      if (q.length < 2) { sugg.classList.remove("open"); return; }
+      searchTimer = setTimeout(async () => {
+        try {
+          const data = await api(`/api/sites?q=${encodeURIComponent(q)}`);
+          sitesCache = data.sites;
+          activeIdx = -1;
+          renderSugg(data.sites, q);
+        } catch (e) { toast(e.message, false); }
+      }, 200);
+    });
+
+    inpSite.addEventListener("keydown", (e) => {
+      if (!sugg.classList.contains("open")) return;
+      const btns = [...sugg.querySelectorAll("button")];
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        activeIdx = Math.min(activeIdx + 1, btns.length - 1);
+        highlight(btns);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        activeIdx = Math.max(activeIdx - 1, 0);
+        highlight(btns);
+      } else if (e.key === "Enter") {
+        if (activeIdx >= 0 && btns[activeIdx]) {
+          e.preventDefault();
+          btns[activeIdx].click();
+        }
+      } else if (e.key === "Escape") {
+        sugg.classList.remove("open");
+      }
+    });
+
+    function highlight(btns) {
+      btns.forEach((b, i) => b.classList.toggle("active", i === activeIdx));
+      if (activeIdx >= 0) btns[activeIdx].scrollIntoView({ block: "nearest" });
+    }
+
+    function renderSugg(list, q) {
+      if (list.length === 0) {
+        sugg.innerHTML = `<div class="empty">Tidak ada site cocok dengan "${q}"</div>`;
+      } else {
+        sugg.innerHTML = list.map((name) => {
+          const lower = name.toLowerCase();
+          const idx = lower.indexOf(q.toLowerCase());
+          let html = name;
+          if (idx >= 0) {
+            html = name.slice(0, idx) +
+              `<mark style="background:#3b82f655;color:#fff;border-radius:3px;">` +
+              name.slice(idx, idx + q.length) + `</mark>` +
+              name.slice(idx + q.length);
+          }
+          return `<button type="button" data-name="${name.replace(/"/g,"&quot;")}">${html}</button>`;
+        }).join("");
+        sugg.querySelectorAll("button").forEach((b) => {
+          b.addEventListener("click", () => pickSite(b.dataset.name));
+        });
+      }
+      sugg.classList.add("open");
+    }
+
+    function pickSite(name) {
+      selectedSite = name;
+      inpSite.value = name;
+      sugg.classList.remove("open");
+      $("matchInfo").textContent = "✓ " + name;
+      $("matchInfo").style.color = "var(--green)";
+    }
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".search-box")) sugg.classList.remove("open");
+    });
+
+    // exact match if user types full name
+    inpSite.addEventListener("change", () => {
+      const v = inpSite.value.trim().toLowerCase();
+      const hit = sitesCache.find((s) => s.toLowerCase() === v);
+      if (hit) pickSite(hit);
+    });
+
+    // ---- add visit ----
+    $("btnAdd").addEventListener("click", addVisit);
+    inpSite.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && sugg.classList.contains("open") && activeIdx < 0) {
+        e.preventDefault();
+      }
+    });
+
+    async function addVisit() {
+      const date = $("inpDate").value;
+      const site = selectedSite || inpSite.value.trim();
+      const note = $("inpNote").value.trim();
+      if (!date) return toast("Pilih tanggal dulu", false);
+      if (!site) return toast("Masukkan nama lokasi", false);
+      if (!selectedSite) {
+        const hit = sitesCache.find((s) => s.toLowerCase() === site.toLowerCase());
+        if (hit) selectedSite = hit;
+      }
+      try {
+        await api("/api/visits", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date, site: selectedSite || site, note }),
+        });
+        toast("Visit ditambahkan ✓");
+        inpSite.value = "";
+        inpNote.value = "";
+        selectedSite = "";
+        $("matchInfo").textContent = "";
+        if (date.slice(0,7) !== currentMonth()) $("inpMonth").value = date.slice(0,7);
+        loadVisits();
+        hidePreview();
+      } catch (e) { toast(e.message, false); }
+    }
+
+    // ---- list ----
+    async function loadVisits() {
+      const month = currentMonth();
+      try {
+        const data = await api(`/api/visits?month=${month}`);
+        renderStats(data.visits);
+        renderList(data.visits);
+        $("preview").classList.remove("open");
+        $("btnPreview").textContent = "📄 Preview Rekap";
+      } catch (e) { toast(e.message, false); }
+    }
+
+    function renderStats(visits) {
+      const days = new Set(visits.map((v) => v.date));
+      const today = todayISO();
+      const todayCount = visits.filter((v) => v.date === today).length;
+      $("stats").innerHTML = `
+        <div class="stat"><div class="num">${visits.length}</div><div class="lbl">Total Lokasi</div></div>
+        <div class="stat"><div class="num">${days.size}</div><div class="lbl">Hari Kunjungan</div></div>
+        <div class="stat"><div class="num">${todayCount}</div><div class="lbl">Hari Ini</div></div>
+      `;
+    }
+
+    function renderList(visits) {
+      const el = $("list");
+      if (visits.length === 0) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">🗓</div>
+          <div>Belum ada visit di bulan ini.<br/>Ketik nama lokasi di atas untuk mulai.</div></div>`;
+        return;
+      }
+      const byDate = {};
+      visits.forEach((v) => {
+        (byDate[v.date] = byDate[v.date] || []).push(v);
+      });
+      const dates = Object.keys(byDate).sort();
+      el.innerHTML = dates.map((date) => {
+        const items = byDate[date];
+        const warn = items.length > 2 ? "warn" : "";
+        return `<div class="day-group">
+          <div class="day-head">
+            <span class="day-title">${fmtDate(date)}</span>
+            <span class="badge ${warn}">${items.length} lokasi</span>
+          </div>
+          ${items.map((v, i) => `
+            <div class="visit-item">
+              <div class="idx">${i+1}</div>
+              <div class="name">${esc(v.site)}
+                ${v.note ? `<div class="note">${esc(v.note)}</div>` : ""}
+              </div>
+              <button class="btn btn-danger btn-sm" data-id="${v.id}" data-date="${v.date}">Hapus</button>
+            </div>`).join("")}
+        </div>`;
+      }).join("");
+
+      el.querySelectorAll("button[data-id]").forEach((b) => {
+        b.addEventListener("click", async () => {
+          if (!confirm("Hapus visit ini?")) return;
+          try {
+            await api("/api/visits", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: Number(b.dataset.id), date: b.dataset.date }),
+            });
+            toast("Dihapus");
+            loadVisits();
+          } catch (e) { toast(e.message, false); }
+        });
+      });
+    }
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, (c) =>
+        ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+    }
+
+    // ---- preview / clear ----
+    $("btnPreview").addEventListener("click", async () => {
+      const box = $("preview");
+      if (box.classList.contains("open")) return hidePreview();
+      try {
+        const data = await api(`/api/report?month=${currentMonth()}`);
+        box.textContent = data.text;
+        box.classList.add("open");
+        $("btnPreview").textContent = "✖ Tutup Preview";
+      } catch (e) { toast(e.message, false); }
+    });
+
+    function hidePreview() {
+      $("preview").classList.remove("open");
+      $("btnPreview").textContent = "📄 Preview Rekap";
+    }
+
+    $("btnClear").addEventListener("click", async () => {
+      const m = currentMonth();
+      if (!confirm(`Hapus SEMUA visit bulan ${m}?`)) return;
+      try {
+        await api("/api/visits/clear", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ month: m }),
+        });
+        toast("Bulan dibersihkan");
+        loadVisits();
+      } catch (e) { toast(e.message, false); }
+    });
+
+    // ---- WhatsApp ----
+    $("btnSendWA").addEventListener("click", async () => {
+      const btn = $("btnSendWA");
+      const month = currentMonth();
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spin"></span> Cek koneksi…`;
+      try {
+        let st = await api("/api/wa/status", { method: "POST" });
+        if (st.state !== "open") {
+          showQR();
+          pollQR(btn, month);
+          return;
+        }
+        await doSend(btn, month);
+      } catch (e) {
+        toast(e.message, false);
+        resetSendBtn(btn);
+      }
+    });
+
+    async function pollQR(btn, month) {
+      let tries = 0;
+      const timer = setInterval(async () => {
+        tries++;
+        try {
+          const st = await api("/api/wa/status", { method: "POST" });
+          if (st.state === "open") {
+            clearInterval(timer);
+            hideQR();
+            await doSend(btn, month);
+          } else if (tries > 60) {
+            clearInterval(timer);
+            toast("Timeout — coba lagi", false);
+            resetSendBtn(btn);
+          }
+        } catch (e) {
+          clearInterval(timer);
+          toast(e.message, false);
+          resetSendBtn(btn);
+        }
+      }, 2000);
+    }
+
+    async function doSend(btn, month) {
+      btn.innerHTML = `<span class="spin"></span> Mengirim…`;
+      try {
+        await api("/api/wa/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ month }),
+        });
+        toast("Rekap bulanan terkirim ✓");
+      } catch (e) {
+        toast(e.message, false);
+      } finally {
+        resetSendBtn(btn);
+      }
+    }
+
+    function resetSendBtn(btn) {
+      btn.disabled = false;
+      btn.innerHTML = "💬 Kirim ke WhatsApp";
+    }
+
+    async function showQR() {
+      $("qrModal").classList.add("open");
+      await refreshQR(true);
+    }
+
+    async function refreshQR(forceReset = false) {
+      const img = $("qrImg");
+      try {
+        if (forceReset) {
+          img.alt = "Membuat QR baru…";
+          img.removeAttribute("src");
+          await api("/api/wa/reset", { method: "POST" });
+        }
+
+        for (let i = 0; i < 20; i++) {
+          const data = await api("/api/wa/qr", { method: "POST" });
+          if (data.qr) {
+            img.src = data.qr;
+            img.alt = "QR WhatsApp";
+            return;
+          }
+
+          const st = await api("/api/wa/status", { method: "POST" });
+          if (st.state === "open") {
+            hideQR();
+            toast("WhatsApp sudah terhubung ✓");
+            return;
+          }
+
+          img.alt = "Menunggu QR… (" + (i + 1) + ")";
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+        toast("QR belum siap — coba lagi", false);
+      } catch (e) {
+        toast(e.message, false);
+      }
+    }
+
+    function hideQR() { $("qrModal").classList.remove("open"); }
+    $("btnCloseQR").addEventListener("click", hideQR);
+    $("btnRetryQR").addEventListener("click", () => refreshQR(true));
+    $("qrModal").addEventListener("click", (e) => {
+      if (e.target === $("qrModal")) hideQR();
+    });
+
+    // ---- init ----
+    $("inpDate").value = todayISO();
+    $("inpMonth").value = todayISO().slice(0, 7);
+    $("inpMonth").addEventListener("change", loadVisits);
+    loadVisits();
+  </script>
+</body>
+</html>
